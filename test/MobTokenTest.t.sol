@@ -13,8 +13,8 @@ contract MobTokenTest is Test {
 
     string constant TOKEN_NAME = "Mobee Token";
     string constant TOKEN_SYMBOL = "MOB";
-    uint256 constant INITIAL_SUPPLY = 500_000_000; // 500 million tokens
-    uint256 constant INITIAL_SUPPLY_WITH_DECIMALS = INITIAL_SUPPLY * 10 ** 18;
+    uint256 constant TOTAL_SUPPLY = 500_000_000; // 500 million tokens
+    uint256 constant TOTAL_SUPPLY_WITH_DECIMALS = TOTAL_SUPPLY * 10 ** 18;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -24,7 +24,7 @@ contract MobTokenTest is Test {
         user1 = makeAddr("user1");
         user2 = makeAddr("user2");
 
-        token = new MobToken(TOKEN_NAME, TOKEN_SYMBOL, INITIAL_SUPPLY);
+        token = new MobToken(TOKEN_NAME, TOKEN_SYMBOL, TOTAL_SUPPLY);
     }
 
     // Constructor Tests
@@ -41,18 +41,18 @@ contract MobTokenTest is Test {
     }
 
     function test_Constructor_MintsCorrectInitialSupply() public {
-        assertEq(token.totalSupply(), INITIAL_SUPPLY_WITH_DECIMALS);
+        assertEq(token.totalSupply(), TOTAL_SUPPLY_WITH_DECIMALS);
     }
 
     function test_Constructor_MintsToDeployer() public {
-        assertEq(token.balanceOf(owner), INITIAL_SUPPLY_WITH_DECIMALS);
+        assertEq(token.balanceOf(owner), TOTAL_SUPPLY_WITH_DECIMALS);
     }
 
     function test_Constructor_EmitsTransferEvent() public {
         vm.expectEmit(true, true, false, true);
-        emit Transfer(address(0), owner, INITIAL_SUPPLY_WITH_DECIMALS);
+        emit Transfer(address(0), owner, TOTAL_SUPPLY_WITH_DECIMALS);
 
-        new MobToken(TOKEN_NAME, TOKEN_SYMBOL, INITIAL_SUPPLY);
+        new MobToken(TOKEN_NAME, TOKEN_SYMBOL, TOTAL_SUPPLY);
     }
 
     // Edge case constructor tests
@@ -86,13 +86,13 @@ contract MobTokenTest is Test {
         bool success = token.transfer(user1, transferAmount);
 
         assertTrue(success);
-        assertEq(token.balanceOf(owner), INITIAL_SUPPLY_WITH_DECIMALS - transferAmount);
+        assertEq(token.balanceOf(owner), TOTAL_SUPPLY_WITH_DECIMALS - transferAmount);
         assertEq(token.balanceOf(user1), transferAmount);
     }
 
     function test_Transfer_InsufficientBalance() public {
         vm.expectRevert();
-        token.transfer(user1, INITIAL_SUPPLY_WITH_DECIMALS + 1);
+        token.transfer(user1, TOTAL_SUPPLY_WITH_DECIMALS + 1);
     }
 
     function test_Transfer_ToZeroAddress() public {
@@ -124,7 +124,7 @@ contract MobTokenTest is Test {
         bool success = token.transferFrom(owner, user2, transferAmount);
 
         assertTrue(success);
-        assertEq(token.balanceOf(owner), INITIAL_SUPPLY_WITH_DECIMALS - transferAmount);
+        assertEq(token.balanceOf(owner), TOTAL_SUPPLY_WITH_DECIMALS - transferAmount);
         assertEq(token.balanceOf(user2), transferAmount);
         assertEq(token.allowance(owner, user1), approvalAmount - transferAmount);
     }
@@ -140,7 +140,7 @@ contract MobTokenTest is Test {
     }
 
     function test_TransferFrom_InsufficientBalance() public {
-        uint256 transferAmount = INITIAL_SUPPLY_WITH_DECIMALS + 1;
+        uint256 transferAmount = TOTAL_SUPPLY_WITH_DECIMALS + 1;
 
         token.approve(user1, transferAmount);
 
@@ -180,12 +180,12 @@ contract MobTokenTest is Test {
 
     // Fuzz Tests
     function testFuzz_Transfer(uint256 amount) public {
-        amount = bound(amount, 0, INITIAL_SUPPLY_WITH_DECIMALS);
+        amount = bound(amount, 0, TOTAL_SUPPLY_WITH_DECIMALS);
 
         bool success = token.transfer(user1, amount);
         assertTrue(success);
         assertEq(token.balanceOf(user1), amount);
-        assertEq(token.balanceOf(owner), INITIAL_SUPPLY_WITH_DECIMALS - amount);
+        assertEq(token.balanceOf(owner), TOTAL_SUPPLY_WITH_DECIMALS - amount);
     }
 
     function testFuzz_Approve(uint256 amount) public {
@@ -194,21 +194,21 @@ contract MobTokenTest is Test {
         assertEq(token.allowance(owner, user1), amount);
     }
 
-    function testFuzz_Constructor(string memory name, string memory symbol, uint256 initialSupply) public {
+    function testFuzz_Constructor(string memory name, string memory symbol, uint256 totalSupply) public {
         // Bound initialSupply to prevent overflow
-        initialSupply = bound(initialSupply, 0, type(uint256).max / 10 ** 18);
+        totalSupply = bound(totalSupply, 0, type(uint256).max / 10 ** 18);
 
-        MobToken fuzzToken = new MobToken(name, symbol, initialSupply);
+        MobToken fuzzToken = new MobToken(name, symbol, totalSupply);
 
         assertEq(fuzzToken.name(), name);
         assertEq(fuzzToken.symbol(), symbol);
-        assertEq(fuzzToken.totalSupply(), initialSupply * 10 ** 18);
-        assertEq(fuzzToken.balanceOf(address(this)), initialSupply * 10 ** 18);
+        assertEq(fuzzToken.totalSupply(), totalSupply * 10 ** 18);
+        assertEq(fuzzToken.balanceOf(address(this)), totalSupply * 10 ** 18);
     }
 
     // Invariant Tests
     function invariant_TotalSupplyNeverChanges() public {
-        assertEq(token.totalSupply(), INITIAL_SUPPLY_WITH_DECIMALS);
+        assertEq(token.totalSupply(), TOTAL_SUPPLY_WITH_DECIMALS);
     }
 
     // Gas optimization tests

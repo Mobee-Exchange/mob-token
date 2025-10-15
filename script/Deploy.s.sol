@@ -16,7 +16,7 @@ contract DeployScript is Script {
         MobToken token = new MobToken(
             "Mobee Token", // name
             "MOB", // symbol
-            500_000_000 // initial supply
+            500_000_000 // total supply
         );
 
         vm.stopBroadcast();
